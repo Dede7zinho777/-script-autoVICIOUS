@@ -64,6 +64,23 @@ statusLabel.Parent = screenGui
 
 print("✅ Status label created")
 
+-- Declare these before button callbacks so local-scope lookup is valid on click.
+local function notify(title, text)
+    pcall(function()
+        StarterGui:SetCore("SendNotification", {
+            Title = title,
+            Text = text,
+            Duration = 3
+        })
+    end)
+end
+
+local function updateStatus(text)
+    pcall(function()
+        statusLabel.Text = text
+    end)
+end
+
 -- Update button visual
 local function updateButtonVisual()
     hopButton.Visible = true
@@ -98,22 +115,6 @@ hopButton.MouseButton1Click:Connect(function()
         notify("AUTO VICIOUS - CHX", "❌ Auto Hop OFF")
     end
 end)
-
-local function notify(title, text)
-    pcall(function()
-        StarterGui:SetCore("SendNotification", {
-            Title = title,
-            Text = text,
-            Duration = 3
-        })
-    end)
-end
-
-local function updateStatus(text)
-    pcall(function()
-        statusLabel.Text = text
-    end)
-end
 
 local function getHRP()
     return player.Character and player.Character:FindFirstChild("HumanoidRootPart")
@@ -254,7 +255,7 @@ local function main()
                         scanState.autoHopActive = false
                         updateButtonVisual()
                         
-                        updateStatus("🟢 VICIOUS FOUND!\n\nPos:\n" .. pos .. "\n\nClick HOP NOW")
+                        updateStatus("🟢 VICIOUS ENCONTRADA!\n\nPos:\n" .. pos .. "\n\nAuto Hop desativado")
                         notify("AUTO VICIOUS - CHX", "🐝 ENCONTRADA!")
                     end
                     
@@ -264,6 +265,13 @@ local function main()
                 end
             else
                 -- No vicious found
+                if scanState.viciousFound then
+                    -- Release the latch after the target leaves so the same button can be used again.
+                    scanState.viciousFound = false
+                    updateButtonVisual()
+                    updateStatus("⚠️ Vicious saiu do servidor.\nAuto Hop desativado\nClique no botao para ativar.")
+                    notify("AUTO VICIOUS - CHX", "Vicious desapareceu; Auto Hop liberado.")
+                end
                 if scanState.autoHopActive and not scanState.viciousFound then
                     -- Auto hop is ON - keep hopping
                     updateStatus("🔀 Hopping servers...\n\n")
